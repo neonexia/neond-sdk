@@ -3,22 +3,24 @@
 Publish and receive messages from Node.js applications and agents. Requires Node.js 24.
 
 ```sh
-npm install https://github.com/neonexia/neond-sdk/releases/download/v0.1.1/neond-sdk-0.1.1.tgz
+npm install https://github.com/neonexia/neond-sdk/releases/download/v0.1.2/neond-sdk-0.1.2.tgz
 ```
 
 ## Send and receive text
 
-Start NeonD and create a namespace through its administration API. Then:
+Start NeonD, then create a namespace and send a message using the SDK:
 
 ```js
 import { connect } from '@alini/messaging-core';
 
 const client = await connect({
   gatewayUrl: 'ws://127.0.0.1:8092',
+  administration: { url: 'http://127.0.0.1:8080' },
   credentials: { trustedLocalSubject: 'my-agent' },
 });
 try {
-  const channel = await client.namespace('demo').ensureChannel('hello');
+  const namespace = await client.createNamespace('demo');
+  const channel = await namespace.ensureChannel('hello');
   const messages = channel.subscribe();
   await messages.ready;
   await channel.publish('Hello from my agent!');
@@ -69,5 +71,5 @@ after replay reaches the newest message; they do not finish by themselves.
 ## Releases
 
 Built JavaScript, TypeScript declarations and the Apache-2.0 license are included.
-The import name remains `@alini/messaging-core`. SDK 0.1.1 works with NeonD
+The import name remains `@alini/messaging-core`. SDK 0.1.2 works with NeonD
 `ghcr.io/neonexia/neond:0.1.0-alpha.1`; upgrading the server is not required.

@@ -8,8 +8,8 @@ const channel = await client.namespace('demo').ensureChannel('hello');
 const messages = channel.subscribe();
 await messages.ready;
 
-await channel.publish(new TextEncoder().encode('Hello from my agent!'));
+await channel.publish('Hello from my agent!');
 const { value } = await messages.next();
-console.log(new TextDecoder().decode(value.payload));
+console.log(value.text());
 
 await client.close();

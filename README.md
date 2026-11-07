@@ -1,33 +1,73 @@
 # NeonD SDK
 
-The public, built Node.js SDK for NeonD. Requires Node.js 24.
+Publish and receive messages from Node.js applications and agents. Requires Node.js 24.
 
 ```sh
-npm install https://github.com/neonexia/neond-sdk/releases/download/v0.1.0/neond-sdk-0.1.0.tgz
+npm install https://github.com/neonexia/neond-sdk/releases/download/v0.1.1/neond-sdk-0.1.1.tgz
 ```
 
-Import the public API:
+## Send and receive text
+
+Start NeonD and create a namespace through its administration API. Then:
 
 ```js
 import { connect } from '@alini/messaging-core';
+
+const client = await connect({
+  gatewayUrl: 'ws://127.0.0.1:8092',
+  credentials: { trustedLocalSubject: 'my-agent' },
+});
+try {
+  const channel = await client.namespace('demo').ensureChannel('hello');
+  const messages = channel.subscribe();
+  await messages.ready;
+  await channel.publish('Hello from my agent!');
+  const { value } = await messages.next();
+  console.log(value.text());
+} finally {
+  await client.close();
+}
 ```
 
-The existing package name is retained so applications keep the same API.
-The `private` package flag prevents accidental npm-registry publication; it does
-not prevent installation from this release URL. No npm-registry account is needed.
+The local identity above is for a trusted development deployment.
 
-This release contains compiled JavaScript, TypeScript declarations, README and
-Apache-2.0 license only. It is the exact SDK shipped in NeonD 0.1.0-alpha.1
-(image index `sha256:e90114920a9a4a4d6ac3f25cbb5a639bc15a79a196d79fd7bffd8e9e7d792a17`),
-built from runtime revision `703e075b9a66c8256544749f08e847a1e0116f6c`.
-The packaged README predates public distribution; this release page supersedes
-its unpublished-status sentence. The tarball is unchanged from the qualified image.
+## Text and bytes
 
-Run NeonD locally:
+`publish()` accepts a string, Uint8Array or Node.js Buffer. Strings use UTF-8.
+`message.text()` reads UTF-8 text; `message.payload` returns the original bytes.
+Invalid UTF-8 bytes appear as replacement characters in text, without changing
+the payload. Message size limits apply to encoded bytes.
 
-```sh
-docker run -d --name neond -p 127.0.0.1:8080:8080 -p 127.0.0.1:8092:8092 -v neond-data:/data ghcr.io/neonexia/neond:0.1.0-alpha.1
-```
+For JSON, publish `JSON.stringify(value)` and read `JSON.parse(message.text())`.
+NeonD does not require a JSON schema.
 
-Namespaces are provisioned through NeonD administration. The SDK creates channels
-inside an existing namespace. See `hello.mjs` for a first publish/subscribe example.
+## Choose how to receive messages
+
+- `subscribe()` receives new messages while connected.
+- `subscribe({ autoAck: true, startSequence: 1 })` reads saved messages from
+  the first position, then continues listening. Receipt is acknowledged
+  automatically; it does not wait for your processing.
+- `subscribe({ durable: 'worker' })` remembers progress on the server. Call
+  `await message.ack()` after successful processing. Unacknowledged messages
+  can be delivered again, so make repeated processing safe.
+
+For a saved publication confirmation, use
+`await channel.publish('hello', { guarantee: 'persisted' })`.
+This confirms storage, not completion by a subscriber.
+
+## Handle failures
+
+Use try/catch around operations. Errors have a `code`, such as
+`message_too_large`, `deadline_exceeded` or `namespace_archived`.
+The SDK retries confirmed unsent publications within their deadline. An
+`outcome_unknown` means confirmation was lost; the message may already be stored,
+so the SDK does not automatically send it again.
+
+Close readers or the client when finished. Retained subscriptions keep listening
+after replay reaches the newest message; they do not finish by themselves.
+
+## Releases
+
+Built JavaScript, TypeScript declarations and the Apache-2.0 license are included.
+The import name remains `@alini/messaging-core`. SDK 0.1.1 works with NeonD
+`ghcr.io/neonexia/neond:0.1.0-alpha.1`; upgrading the server is not required.

@@ -3,7 +3,7 @@
 Publish and receive messages from Node.js applications and agents. Requires Node.js 24.
 
 ```sh
-npm install https://github.com/neonexia/neond-sdk/releases/download/v0.1.2/neond-sdk-0.1.2.tgz
+npm install https://github.com/neonexia/neond-sdk/releases/download/v0.1.3/neond-sdk-0.1.3.tgz
 ```
 
 ## Send and receive text
@@ -71,5 +71,7 @@ after replay reaches the newest message; they do not finish by themselves.
 ## Releases
 
 Built JavaScript, TypeScript declarations and the Apache-2.0 license are included.
-The import name remains `@alini/messaging-core`. SDK 0.1.2 works with NeonD
-`ghcr.io/neonexia/neond:0.1.0-alpha.1`; upgrading the server is not required.
+The import name remains `@alini/messaging-core`. SDK 0.1.3 is qualified with NeonD
+`ghcr.io/neonexia/neond:0.1.0-alpha.2`.
+
+[Documentation](https://neonexia.github.io/neond-docs/) · [Matching source archives and notices](https://github.com/neonexia/neond-sdk/releases/tag/v0.1.3)
